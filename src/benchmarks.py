@@ -1,7 +1,3 @@
-"""
-benchmarks.py - Calculate buy-and-hold returns for market benchmarks
-"""
-
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
@@ -10,11 +6,11 @@ from math import sqrt
 # Paths
 BENCHMARK_PRICES_PATH = './data/raw/benchmark_prices.csv'
 
-# Date ranges (should match your train/test split)
+# Date ranges
 TRAIN_START = '2021-01-01'
-TRAIN_END = '2024-12-31'
-TEST_START = '2025-01-01'
-TEST_END = '2025-10-01'
+TRAIN_END = '2024-06-30'
+TEST_START = '2024-07-01'
+TEST_END = '2025-06-30'
 
 def calculate_benchmark_returns(prices_df, period_start, period_end):
     """
@@ -30,16 +26,7 @@ def calculate_benchmark_returns(prices_df, period_start, period_end):
     --------
     DataFrame with columns [Ticker, total_return, annualized_return, 
                            annualized_volatility, sharpe_ratio]
-    
-    Hints:
-    ------
-    - Filter prices_df by date range
-    - For each ticker:
-        - Total return: (1 + returns).prod() - 1
-        - Annualized return: (1 + total_return) ** (252 / num_days) - 1
-        - Annualized volatility: returns.std() * sqrt(252)
-        - Sharpe ratio: annualized_return / annualized_volatility (assuming rf=0)
-    - Return as DataFrame for easy comparison
+
     """
     # Slice dataframe based on dates
     prices_sliced = prices_df[(prices_df['Date'] >= period_start) & (prices_df['Date'] <= period_end)]
