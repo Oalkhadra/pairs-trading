@@ -1,4 +1,3 @@
-# src/data_loader.py
 import yfinance as yf
 import requests
 import pandas as pd
@@ -6,6 +5,7 @@ from io import StringIO
 import numpy as np
 
 def ticker_scrape(url):
+    """Scrape S&P 500 tickers from Wikipedia table"""
     headers = {"User-Agent": "Mozilla/5.0"}
     resp = requests.get(url, headers=headers)
 
@@ -14,23 +14,21 @@ def ticker_scrape(url):
 
     sp500 = tables[0]
     tickers = sorted(sp500["Symbol"].tolist())
-
     df = pd.DataFrame(tickers, columns=["Ticker"])
     
     # Extract prices for Index Benchmarks for comparison
     benchmarks = pd.DataFrame(['QQQ', 'SPY'], columns=['Ticker'])
     df = pd.concat([df, benchmarks], ignore_index=True)
 
-    csv_path = './data/raw/ticker_list.csv'
-
     # Store tickers as .csv list    
+    csv_path = './data/raw/ticker_list.csv'
     df.to_csv(csv_path, index=False)
-
     print(f"✅ Extracted {len(df)} tickers")
 
     return csv_path
 
-def load_price_data(ticker_list_path):
+def load_price_data(ticker_list_path, data_start, data_end):
+    """Download historical price data from Yahoo Finance."""
     # Read ticker data
     ticker_list = pd.read_csv(ticker_list_path)["Ticker"].tolist()
     
@@ -39,8 +37,8 @@ def load_price_data(ticker_list_path):
     
     # Download data for all tickers
     df = yf.download(ticker_list, 
-                     start='2021-01-01', 
-                     end='2025-06-30', 
+                     start=data_start, 
+                     end=data_end, 
                      group_by="ticker", 
                      auto_adjust=True,
                      progress=True)
@@ -73,13 +71,15 @@ if __name__ == '__main__':
     ticker_list_path = ticker_scrape(sp500_ticker_list)
 
     # Load price data for all tickers in list
-    prices_df = load_price_data(ticker_list_path)
+    prices_df = load_price_data(ticker_list_path,
+                                data_start='2021-01-01',
+                                data_end='2025-10-15')
 
-    # Split data into train and test by date (Use first 4 years to estimate output in final year)
+    # Split data into train (Cointegration) and test (strategy analysis) by date
     train_start = '2021-01-01'
     train_end = '2024-06-30'
     test_start = '2024-07-01'
-    test_end = '2025-06-30'
+    test_end = '2025-10-15'
 
     print("Splitting data into train and test with the following ranges:\n")
     print(f"Training period between {train_start} and {train_end}")
@@ -91,7 +91,6 @@ if __name__ == '__main__':
     prices_train.to_csv( './data/raw/prices_train.csv')
     prices_test.to_csv( './data/raw/prices_test.csv')
     print(f"Successfully split data into {len(prices_train)} rows for training and {len(prices_test)} rows for testing")
-
 
     # Store benchmark prices
     benchmark_prices = prices_df[(prices_df['Ticker'] == 'QQQ') | (prices_df['Ticker'] == 'SPY')]

@@ -1,5 +1,3 @@
-# src/cointegration.py
-
 import pandas as pd
 import numpy as np
 from statsmodels.tsa.stattools import adfuller
@@ -10,6 +8,24 @@ import statsmodels.api as sm
 TRAIN_PRICES_PATH = './data/raw/prices_train.csv'
 
 def cointegration_test(df, ticker_1, ticker_2):
+    """
+    Test two stocks for cointegration using Johansen test and calculate OLS hedge ratio.
+    
+    Args:
+        df: DataFrame with columns ['Ticker', 'Date', 'LogClose']
+        ticker_1: Base stock ticker (e.g., 'XOM')
+        ticker_2: Candidate stock ticker to test against base
+        
+    Returns:
+        Dictionary containing:
+            - base: Base ticker
+            - candidate: Candidate ticker
+            - status: "Candidate Pair" if cointegrated, "Not a candidate" otherwise
+            - test_statistic: Johansen test statistic
+            - critical_value_5pct: 5% significance critical value
+            - beta: OLS hedge ratio for spread construction
+    """
+
     # Extract log prices for both tickers
     ticker_1_prices = df[df['Ticker'] == ticker_1][["Date", "LogClose"]]
     ticker_2_prices = df[df['Ticker'] == ticker_2][["Date", "LogClose"]]
@@ -24,6 +40,7 @@ def cointegration_test(df, ticker_1, ticker_2):
     except np.linalg.LinAlgError:
         return {"status": "Johansen failed", "beta": None}
 
+    # Critical value check
     is_cointegrated = coint_result.lr1[0] > coint_result.cvt[0][2]
     
     # Calculate OLS hedge ratio
@@ -45,6 +62,17 @@ def cointegration_test(df, ticker_1, ticker_2):
     return result
 
 def run_cointegration(df, base, candidates):
+    """
+    Run cointegration tests for a base stock against multiple candidate stocks.
+    
+    Args:
+        df: DataFrame with columns ['Ticker', 'Date', 'LogClose']
+        base: Base stock ticker (e.g., 'XOM')
+        candidates: List of candidate ticker symbols to test
+        
+    Returns:
+        Dictionary mapping pair names (e.g., "XOM and CVX") to cointegration test results
+    """
     # Initiate results dictionary
     cointegration_results = {}
 
@@ -54,6 +82,20 @@ def run_cointegration(df, base, candidates):
     return cointegration_results
     
 def half_life(spread):
+    """
+    Calculate half-life of mean reversion using AR(1) model.
+    
+    Fits the model: Δspread_t = β * spread_{t-1} + ε
+    Half-life = -ln(2) / β
+    
+    Args:
+        spread: Time series of spread values (typically log price differences)
+        
+    Returns:
+        Tuple of (half_life, r_squared):
+            - half_life: Mean reversion half-life in same units as spread index (np.inf if no mean reversion)
+            - r_squared: R² from AR(1) regression
+    """
     spread_lag = spread.shift(1).dropna()
     delta_spread = spread.diff().dropna()
     
@@ -74,6 +116,32 @@ def half_life(spread):
     return halflife, res.rsquared
 
 def stationarity_half_life(df, coint_results):
+    """
+    Test spread stationarity and calculate half-life for cointegrated pairs.
+    
+    For each cointegrated pair:
+    1. Constructs spread using estimated hedge ratio
+    2. Runs Augmented Dickey-Fuller test for stationarity
+    3. Calculates mean-reversion half-life
+    
+    Args:
+        df: DataFrame with columns ['Ticker', 'Date', 'LogClose']
+        coint_results: Dictionary of cointegration test results from run_cointegration()
+        
+    Returns:
+        DataFrame with columns:
+            - pair: Pair identifier (e.g., "XOM and CVX")
+            - base: Base ticker
+            - candidate: Candidate ticker
+            - beta: Hedge ratio
+            - adf_stat: ADF test statistic
+            - pval: ADF p-value
+            - crit_1pct: 1% critical value
+            - is_stationary: True if p-value < 0.01 (99% confidence)
+            - half_life: Mean-reversion half-life in days
+            - r2: R² from half-life regression
+    """
+
     # Pre-filter to only cointegrated pairs
     cointegrated_pairs = {
         pair: result for pair, result in coint_results.items() 
@@ -114,7 +182,7 @@ def stationarity_half_life(df, coint_results):
                 "adf_stat": adf_stat,
                 "pval": pval,
                 "crit_1pct": crit_vals["1%"],
-                "is_stationary": pval < 0.01,  # reject unit root at 1% (I want 99% confidence)
+                "is_stationary": pval < 0.01,  # reject unit root at 1%
                 "half_life": halflife,
                 "r2": r2
             })
@@ -127,11 +195,12 @@ def stationarity_half_life(df, coint_results):
     return pd.DataFrame(results)
 
 if __name__ == '__main__':
-    # Define ticker you are looking for cointegrated pair candidates with
+
+    # Define the base ticker analysis
     base_ticker = 'XOM'
 
     # Read data and identify all other tickers
-    prices_df = pd.read_csv(TRAIN_PRICES_PATH)
+    prices_df = pd.read_csv(TRAIN_PRICES_PATH) # Cointegration and stationarity is only extracted from training data
     candidate_tickers = prices_df['Ticker'].unique().tolist() 
     candidate_tickers.remove(base_ticker)
 
@@ -145,7 +214,7 @@ if __name__ == '__main__':
     output_path = f'./data/processed/stationary_pairs_{base_ticker}.csv'
     stationary_pairs = stationarity_test[stationarity_test['is_stationary'] == True]
     stationary_pairs = stationary_pairs.sort_values(by='half_life')
-
+    
     stationary_pairs.to_csv(output_path, index=False)
     print(f"\n✅ Found {len(stationary_pairs)} stationary pairs")
     print(f"💾 Saved to {output_path}")

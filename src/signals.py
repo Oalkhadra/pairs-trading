@@ -1,20 +1,21 @@
-# src/signals.py
-
 import pandas as pd
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+# Define base ticker
+BASE = 'XOM'
+
 # Define paths
 TRAIN_PRICES_PATH = './data/raw/prices_train.csv'
 TEST_PRICES_PATH = './data/raw/prices_test.csv'
-PAIRS_PATH = './data/processed/stationary_pairs_XOM.csv'
+PAIRS_PATH = f'./data/processed/stationary_pairs_{BASE}.csv'
 
 # Define hyperparameters
-LOOKBACK = 23                   # Days
-ENTRY_THRESHOLD = 2.0           # Z-score
-EXIT_THRESHOLD = 0.0            # Z-score
-STOP_BUFFER = 1.0               # Z-score
-PAIRS = [0, 4, 13, 16, 31, 32]   # Indeces of chosen pairs
+LOOKBACK = 23                   # Days (Extracted from pair_selection.ipynb)
+ENTRY_THRESHOLD = 2.0           # Z-score (σ)
+EXIT_THRESHOLD = 0.0            # Z-score (σ)
+STOP_BUFFER = 1.0               # Z-score (σ)
+PAIRS = [0, 4, 13, 16, 31, 32]   # Indices of chosen pairs 
 
 def build_spread(prices_df, base, candidate, beta): # (Spread = candidate - β * base)
     """
@@ -39,9 +40,8 @@ def build_spread(prices_df, base, candidate, beta): # (Spread = candidate - β *
                          on='Date',
                          suffixes=(f"_{base}", f"_{candidate}"))
 
-    # Define spread column and trim columns 
+    # Calculate spread 
     merged_df['Spread'] = merged_df[f'LogClose_{candidate}'] - beta * merged_df[f'LogClose_{base}'] 
-
     spread_df = merged_df[['Date', 'Spread']].set_index('Date')
 
     return spread_df
@@ -146,40 +146,26 @@ if __name__ == '__main__':
         beta = pair['beta']
         print(f"\nCandidate ticker is {candidate}, with a hedge ratio of {beta}\n")
 
-        # Build spread for train and test
-        train_spread = build_spread(prices_train, base=base, candidate=candidate, beta=beta)
+        # Build spread on test data
         test_spread = build_spread(prices_test, base=base, candidate=candidate, beta=beta)
 
-        # Calculate z-score
-        train_z = calculate_zscore(train_spread, 
-                                    lookback=LOOKBACK) # Define lookback window (days)
-        
+        # Calculate z-score     
         test_z = calculate_zscore(test_spread, 
                                     lookback=LOOKBACK) # Define lookback window (days)
         
         # Generate signals
-        train_signals = generate_signals(train_z,
-                                entry_threshold=ENTRY_THRESHOLD,
-                                exit_threshold=EXIT_THRESHOLD,
-                                stop_buffer=STOP_BUFFER)
-        
         test_signals = generate_signals(test_z,
                                 entry_threshold=ENTRY_THRESHOLD,
                                 exit_threshold=EXIT_THRESHOLD,
                                 stop_buffer=STOP_BUFFER)
 
-        # Combine into single dataframe
-        train_results_df = train_spread.copy()
-        train_results_df['Z_score'] = train_z
-        train_results_df['Signal'] = train_signals['signal']
-        
+        # Combine into single dataframe       
         test_results_df = test_spread.copy()
         test_results_df['Z_score'] = test_z
         test_results_df['Signal'] = test_signals['signal']
 
         # Save to CSV
-        train_results_df.to_csv(f'./data/processed/train_signals_{base}_{candidate}.csv')
         test_results_df.to_csv(f'./data/processed/test_signals_{base}_{candidate}.csv')
 
         print(f"Generated signals for {base}-{candidate}")
-        print(f"Saved to: ./data/signals/[train/test]_signals_{base}_{candidate}.csv")
+        print(f"Saved to: ./data/signals/test_signals_{base}_{candidate}.csv")
