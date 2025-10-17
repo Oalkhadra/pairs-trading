@@ -6,7 +6,7 @@
 
 ## 🎯 Project Overview
 
-This project investigates pairs trading strategies using cointegration-based statistical arbitrage. The key innovation is comparing and combining **traditional pairs** (positive hedge ratio) with **non-traditional pairs** (negative hedge ratio) and demonstrating that portfolio diversification across relationship types produces superior risk-adjusted returns. 
+This project investigates pairs trading strategies using cointegration-based statistical arbitrage. The key innovation is comparing and combining **traditional pairs** (positive hedge ratio) with **non-traditional pairs** (negative hedge ratio) and demonstrating that portfolio diversification across relationship types produces superior risk-adjusted returns. The dataset used contains daily data on the S&P 500 universe, including QQQ and SPY as benchmarks, between 01/01/2021 - 06/30/2025. A training period of 01/01/2021-06/30/2024 was used to detect cointegration and extract hedge ratios; A testing period of 07/01/2024 - 06/30/2025 was used to the resulting strategies and compare metrics (Return, Sharpe, Volatility, Drawdown) against benchmark Buy-and-hold strategies.
 
 **Main Findings:**
 - Non-traditional pairs generated 39.59% returns but with 20.19% volatility (Sharpe 1.78)
