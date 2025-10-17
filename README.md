@@ -155,12 +155,12 @@ Stratified sampling across mean-reversion speeds and relationship types:
 
 | Pair | Type | Half-Life | Test Return | Test Volatility |
 |------|------|-----------|-------------|------------------------|
-| KMX | Non-Traditional | 15.9d | +118.1% | 33.07% |
-| TRMB | Non-Traditional | 22.2d | +10.4% | 34.29% |
-| FRT | Non-Traditional | 31.9d | +5.0% | 20.52% |
-| ATO | Traditional | 18.2d | +6.4% | 13.05% |
-| DE | Traditional | 20.6d | +54.0% | 22.06% |
-| REG | Traditional | 31.7d | -0.2% | 13.25% |
+| XOM - KMX | Non-Traditional | 15.9d | +118.1% | 33.07% |
+| XOM - TRMB | Non-Traditional | 22.2d | +10.4% | 34.29% |
+| XOM - FRT | Non-Traditional | 31.9d | +5.0% | 20.52% |
+| XOM - ATO | Traditional | 18.2d | +6.4% | 13.05% |
+| XOM - DE | Traditional | 20.6d | +54.0% | 22.06% |
+| XOM - REG | Traditional | 31.7d | -0.2% | 13.25% |
 
 ---
 
@@ -208,10 +208,8 @@ profitability.
 inference about selection criteria effectiveness. Larger sample sizes are needed 
 to validate the half-life stratification approach.
 
-**5. Absence of Dynamic Risk Management:** The strategy lacks adaptive position 
-sizing, concentration limits, or mechanisms to exit pairs showing cointegration 
-breakdown. Professional implementations would include these risk controls.
-
+**5. Single Base Ticker Assessed:** This project only looks at pairs with XOM as the base. 
+Future work could greatly benefit by analyzing a multitude of base tickers.
 ---
 
 ## 📧 Contact
