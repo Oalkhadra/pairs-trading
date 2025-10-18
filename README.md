@@ -1,9 +1,5 @@
 # Cointegration Trading Analysis - An Extenstion of Traditional Pairs Trading
 
-> Systematic exploration of mean-reversion strategies combining traditional and non-traditional pairs-trading to achieve superior risk-adjusted returns
-
----
-
 ## 🎯 Project Overview
 
 This project investigates pairs trading strategies using cointegration-based statistical arbitrage. The key innovation is comparing and combining **traditional pairs** (positive hedge ratio) with **non-traditional pairs** (negative hedge ratio) and demonstrating that portfolio diversification across relationship types produces superior risk-adjusted returns. The dataset used contains daily data on the S&P 500 universe, including QQQ and SPY as benchmarks, between 01/01/2021 - 06/30/2025. A training period of 01/01/2021-06/30/2024 was used to detect cointegration and extract hedge ratios; A testing period of 07/01/2024 - 06/30/2025 was used to the resulting strategies and compare metrics (Return, Sharpe, Volatility, Drawdown) against benchmark Buy-and-hold strategies.
@@ -208,8 +204,10 @@ profitability.
 inference about selection criteria effectiveness. Larger sample sizes are needed 
 to validate the half-life stratification approach.
 
-**5. Single Base Ticker Assessed:** This project only looks at pairs with XOM as the base. 
-Future work could greatly benefit by analyzing a multitude of base tickers.
+**5. Single Base Security Assessed:** Testing only 6 of 33 available pairs limits statistical 
+inference about selection cri. This project only looks at pairs with XOM as the base. 
+Validation of this trading strategy could be assessed by look at at a large sample of base tickers.
+
 ---
 
 ## 📧 Contact
