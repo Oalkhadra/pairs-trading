@@ -49,18 +49,20 @@ jupyter notebook notebooks/pair_selection.ipynb
 Interactive notebook for stratified pair selection:
 - Separates pairs by hedge ratio sign (traditional vs. non-traditional)
 - Selects 3 pairs from each basket by half-life (fast, medium, slow)
+- **Note:** This step involves manual selection. Update the `selected_pairs` list in the notebook, which is then used in subsequent steps.
 
 **Step 4: Generate Trading Signals**
 ```bash
 python src/signals.py
 ```
 Calculates spreads and generates entry/exit signals for test period (Jul 2024 - Jun 2025) using ±2σ thresholds. Signals saved for each pair.
+**Note:** The script uses the 6 pairs selected in Step 3 (hardcoded in `signals.py` for XOM analysis: XOM-KMX, XOM-TRMB, XOM-FRT, XOM-ATO, XOM-DE, XOM-REG).
 
 **Step 5: Backtest Individual Strategies**
 ```bash
 python src/backtester.py
 ```
-Runs backtests for all 6 pairs independently, applying transaction costs (15 bps per leg for conservative testing). Outputs individual pair performance metrics and daily returns.
+Runs backtests for all pairs independently, applying transaction costs (15 bps per leg for conservative testing). Outputs individual pair performance metrics and daily returns.
 
 **Step 6: Visualize Individual Results**
 ```bash
@@ -162,24 +164,32 @@ Stratified sampling across mean-reversion speeds and relationship types:
 
 ## 📁 Repository Structure
 ```
+├── data/                    
+│   ├── processed/ # Generated data from scripts
+│   │   └── ...
+│   ├── raw/
+│   │   ├── ticker_list.csv
+│   │   ├── raw_prices.csv
+│   │   └── [Generated train/test/benchmarks datasets]
+│
 ├── src/                    # Core logic
 │   ├── data_loader.py          # Yfinance API call
+│   ├── benchmarks.py           # Benchmark dataset generation
 │   ├── cointegration.py        # Statistical tests
 │   ├── signals.py              # Signal generation for test period
-│   ├── backtester.py           # Backtesting engine for individual strategies (6 unique strategies to comprise portfolio)
-│   └── portfolio_creation.py   # Merging strategies into single portoflio and metric calculations
+│   ├── backtest.py             # Backtesting engine for individual strategies (6 unique strategies to comprise portfolio)
+│   └── portfolio_creation.py   # Functions for merging strategies into single portoflio and metric calculations
 │
 ├── notebooks/                # Analysis workflow
 │   ├── pair_selection.ipynb                    # Notebook splitting candidate pairs into traditional and non-traditional; Allowing for selection of tradeable pairs
 │   ├── inital_backtest_visualizations.ipynb    # Backtesting analysis on single-pair strategies, with visualizations and benchmark comparisons
 │   └── portfolio_assessment.ipynb              # Complete portfolio analysis with configurable allocation strategies and performance comparison
 │
-├── results/               # Outputs
-│   ├── performance_metrics_formatted.xlsx      # Formatted excel showcasing Traditional only, Non-traditional only, and equally weighted portfolios against benchmarks
-│   ├── performance_metrics.xlsx                # Individual portfolio comparison against benchmarks, generated in portfolio_assessment.ipynb
-│   └── cumulative_returns_comparison.png       # Individual portfolio equity curves against benchmarks, generated in portfolio_assessment.ipynb
-└── docs/
-    └── methodology.md     # Detailed explanation of strategy methodology, as well as detailed analysis of results
+└── results/               # Outputs
+    ├── performance_metrics_formatted.xlsx      # Formatted excel showcasing Traditional only, Non-traditional only, and equally weighted portfolios against benchmarks
+    ├── performance_metrics.xlsx                # Individual portfolio comparison against benchmarks, generated in portfolio_assessment.ipynb
+    └── cumulative_returns_comparison.png       # Individual portfolio equity curves against benchmarks, generated in portfolio_assessment.ipynb
+
 ```
 ---
 
